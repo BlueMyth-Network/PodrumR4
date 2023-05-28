@@ -378,7 +378,7 @@ void put_misc_sub_chunk(sub_chunk_t *value, binary_stream_t *stream);
 
 void put_misc_chunk(chunk_t *value, uint32_t sub_chunk_count, binary_stream_t *stream);
 
-void put_misc_uuid(uuid_t value, binary_stream_t *stream);
+void put_misc_uuid(unsigned char *value, binary_stream_t *stream);
 
 void put_misc_skin_image(misc_skin_image_t image, binary_stream_t *stream);
 
