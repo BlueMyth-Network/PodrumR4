@@ -121,17 +121,7 @@ uint8_t verifly_jwt_chain(jwt_data_t *jwtchain, unsigned char **current_public_k
 		return -8;
 	}
 
-	//TODO: hardest part
-	BIO* bio = BIO_new_mem_buf(header_der_key, out_len);
-	EVP_PKEY *pubkey = d2i_PUBKEY_bio(bio, NULL);
-	BIO_free(bio);
-	EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-	EVP_DigestVerifyInit(ctx, NULL, EVP_sha384(), NULL, pubkey);
-	EVP_DigestVerifyUpdate(ctx, jwtchain->raw_header, strlen(jwtchain->raw_header));
-	EVP_DigestVerifyUpdate(ctx, ".", 1);
-	EVP_DigestVerifyUpdate(ctx, jwtchain->raw_payload, strlen(jwtchain->raw_payload));
-	printf("idk %d\n", EVP_DigestVerifyFinal(ctx, raw_signature, signature_size));
-	//testing
+	//TODO: hardest part (verify jwt)
 
 	json_root_t identity_public_key = get_json_object_value("identityPublicKey", payload_entry);
 	if (identity_public_key.type != JSON_STRING) {
