@@ -137,7 +137,7 @@ void on_f(misc_frame_t frame, connection_t *connection, raknet_server_t *server)
 						resource_pack_stack.must_accept = 0;
 						resource_pack_stack.behavior_packs.size = 0;
 						resource_pack_stack.resource_packs.size = 0;
-						resource_pack_stack.game_version = GAME_VERSION;
+						resource_pack_stack.game_version = "*";
 						resource_pack_stack.experiments.size = 0;
 						resource_pack_stack.experiments_previously_used = 0;
 						put_packet_resource_pack_stack(resource_pack_stack, (&(streams[0])));
