@@ -638,7 +638,7 @@ void put_misc_chunk(chunk_t *value, uint32_t sub_chunk_count, binary_stream_t *s
 	}
 }
 
-void put_misc_uuid(uuid_t uuid, binary_stream_t *stream) {
+void put_misc_uuid(unsigned char *uuid, binary_stream_t *stream) {
     uint8_t *uuid_bytes = (uint8_t*)uuid;
     uint8_t le_uuid_bytes[16];
     size_t i;
