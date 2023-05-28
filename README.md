@@ -6,8 +6,22 @@ Podrum is a server software for Minecraft Bedrock Edition written in C and aims 
 This project is still in early development.
 
 ## Building
-Linux/MacOS:
+
+Arch base Linux:
 ```
+sudo pacman -S openssl
+cmake CMakeLists.txt
+make
+```
+Debian base Linux:
+```
+sudo apt install openssl
+cmake CMakeLists.txt
+make
+```
+MacOS:
+```
+brew install openssl
 cmake CMakeLists.txt
 make
 ```
