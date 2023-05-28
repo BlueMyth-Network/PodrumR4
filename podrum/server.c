@@ -112,8 +112,7 @@ void on_f(misc_frame_t frame, connection_t *connection, raknet_server_t *server)
 				send_minecraft_packet(streams, streams_count, connection, server, 0);
 				free(streams[0].buffer);
 				free(streams);
-			}
-			if (pid == ID_LOGIN) {
+			} else if (pid == ID_LOGIN) {
 				handle_packet_login((&(game.streams[i])), connection, server, &player_manager);
 			} else {
 				minecraft_player_t *player = get_minecraft_player_address(connection->address, &player_manager);
