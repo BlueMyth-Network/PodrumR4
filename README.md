@@ -28,6 +28,5 @@ make
 
 Windows:
 ```
-cmake CMakeLists.txt
-msbuild PodrumR4.sln
+idk
 ```
