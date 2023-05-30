@@ -7,8 +7,8 @@
 
 jwt_data_t jwt_decode(char *token){
 	char *header = strtok(token, ".");
-    char *payload = strtok(NULL, ".");
-    char *signature = strtok(NULL, ".");
+        char *payload = strtok(NULL, ".");
+        char *signature = strtok(NULL, ".");
 	jwt_data_t jwt;
 	jwt.raw_header = malloc(strlen(header) + 1);
 	strcpy(jwt.raw_header, header);
