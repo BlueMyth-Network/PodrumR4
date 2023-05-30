@@ -19,7 +19,6 @@
 #include <time.h>
 #include <stdio.h>
 #include <math.h>
-// #include <sha256/sha256.h>
 
 void handle_packet_login(binary_stream_t *stream, connection_t *connection, raknet_server_t *server, minecraft_player_manager_t *player_manager)
 {
@@ -67,12 +66,12 @@ void handle_packet_login(binary_stream_t *stream, connection_t *connection, rakn
 	}
 	destroy_json_root(json_root);
 	free(login.tokens.identity);
-	// json_object_t client_data = test_jwt_decode(login.tokens.client).payload.entry.json_object;
-	// verifly_jwt_chain(&client_data, &current_public_key, &i);
+	json_object_t client_data = test_jwt_decode(login.tokens.client).payload.entry.json_object;
+	verifly_jwt_chain(&client_data, &current_public_key, &i);
 	// for (size_t i = 0; i < client_data.size; i++){
 	// 	printf("test %s \n", client_data.keys[i]);
 	// }
-	// destroy_json_object(client_data);
+	destroy_json_object(client_data);
 	free(login.tokens.client);
 	add_minecraft_player(player, player_manager);
 	send_play_status(PLAY_STATUS_LOGIN_SUCCESS, connection, server);
@@ -136,7 +135,6 @@ uint8_t verifly_jwt_chain(jwt_data_t *jwtchain, unsigned char **current_public_k
 	}
 	char *raw_identity_public_key = identity_public_key.entry.json_string;
 	*current_public_key = char_base64_decode((unsigned char *)raw_identity_public_key, strlen(raw_identity_public_key), &out_len);
-	printf("pass %d\n", (int) *first);
 	return status;
 }
 
