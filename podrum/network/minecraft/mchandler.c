@@ -61,12 +61,12 @@ void handle_packet_login(binary_stream_t *stream, connection_t *connection, rakn
 	unsigned char *current_public_key = NULL;
 	size_t i;
 	for (i = 0; i < chain.entry.json_array.size; ++i) {
-		jwt_data_t jwtchain = test_jwt_decode(get_json_array_value(i, chain.entry.json_array).entry.json_string);
+		jwt_data_t jwtchain = jwt_decode(get_json_array_value(i, chain.entry.json_array).entry.json_string);
 		verifly_jwt_chain(&jwtchain, &current_public_key, &i);
 	}
 	destroy_json_root(json_root);
 	free(login.tokens.identity);
-	json_object_t client_data = test_jwt_decode(login.tokens.client).payload.entry.json_object;
+	json_object_t client_data = jwt_decode(login.tokens.client).payload.entry.json_object;
 	verifly_jwt_chain(&client_data, &current_public_key, &i);
 	// for (size_t i = 0; i < client_data.size; i++){
 	// 	printf("test %s \n", client_data.keys[i]);
