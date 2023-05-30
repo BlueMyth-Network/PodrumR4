@@ -474,7 +474,7 @@ void put_packet_start_game(packet_start_game_t packet, binary_stream_t *stream, 
 	put_misc_string_var_int(packet.multiplayer_correlation_id, stream);
 	put_unsigned_byte(packet.server_authoritative_inventory, stream);
 	put_misc_string_var_int(packet.engine, stream);
-    if(protocol > 503){
+        if(protocol > 503){
 		put_byte(COMPOUND_TAG, stream);
 		put_var_int(0, stream);
 		put_byte(END_TAG, stream);
