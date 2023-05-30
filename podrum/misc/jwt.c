@@ -5,43 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-json_root_t jwt_decode(char *token){
-	char *payload = (char *) malloc(0);
-	size_t size = 0;
-	uint8_t step = 0;
-	size_t i;
-	for (i = 0; i < strlen(token); ++i){
-		if (token[i] == '.') {
-			++step;
-		} else if (step == 1) {
-			++size;
-			payload = (char *) realloc(payload, size);
-			if (token[i] == '-') {
-				payload[size - 1] = '+';
-			} else if (token[i] == '_') {
-				payload[size - 1] = '/';
-			} else {
-				payload[size - 1] = token[i];
-			}
-		} else if (step > 1) {
-			break;
-		}
-	}
-	++size;
-	payload = (char *) realloc(payload, size);
-	payload[size - 1] = 0;
-	binary_stream_t stream = base64_decode(payload);
-	put_unsigned_byte(0, &stream);
-	json_input_t json_input;
-	json_input.json = (char *) stream.buffer;
-	json_input.offset = 0;
-	free(payload);
-	json_root_t json_root = parse_json_root(&json_input);
-	free(stream.buffer);
-	return json_root;
-}
-
-jwt_data_t test_jwt_decode(char *token){
+jwt_data_t jwt_decode(char *token){
 	char *header = strtok(token, ".");
     char *payload = strtok(NULL, ".");
     char *signature = strtok(NULL, ".");
