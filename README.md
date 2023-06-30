@@ -16,6 +16,8 @@ make
 Debian base Linux:
 ```
 sudo apt install openssl
+sudo apt install cmake
+sudo apt install g++
 cmake CMakeLists.txt
 make
 ```
