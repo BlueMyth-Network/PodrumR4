@@ -18,6 +18,7 @@ Debian base Linux:
 sudo apt install openssl
 sudo apt install cmake
 sudo apt install g++
+sudo apt install libssl-dev
 cmake CMakeLists.txt
 make
 ```
