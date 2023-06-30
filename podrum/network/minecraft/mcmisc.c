@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <uuid/uuid.h>
 
 char *get_misc_string_var_int(binary_stream_t *stream)
 {
