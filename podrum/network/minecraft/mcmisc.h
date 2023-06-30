@@ -8,7 +8,6 @@
 #include <cbinarystream/binary_stream.h>
 #include <cnbt/nbt.h>
 #include <podrum/world/chunk/chunk.h>
-#include <uuid/uuid.h>
 
 #define GAMEMODE_SURVIVAL 0
 #define GAMEMODE_CREATIVE 1
