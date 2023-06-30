@@ -14,5 +14,5 @@ typedef struct {
   char *raw_payload;
 } jwt_data_t;
 
-json_root_t jwt_decode(char *token);
+jwt_data_t jwt_decode(char *token);
 #endif
