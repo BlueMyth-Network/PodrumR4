@@ -1,7 +1,6 @@
 #include <podrum/network/minecraft/mcpackets.h>
 #include <czlibhelper/zlib_helper.h>
 #include <stdlib.h>
-#include <uuid/uuid.h>
 #include <tinyaes/aes.h>
 
 packet_game_t get_packet_game(binary_stream_t *stream)
