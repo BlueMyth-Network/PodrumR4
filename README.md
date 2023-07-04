@@ -31,5 +31,5 @@ make
 
 Windows:
 ```
-idk
+just use wsl
 ```
