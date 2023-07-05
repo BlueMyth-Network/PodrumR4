@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define MOJANG_RAKNET 11
+
 binary_stream_t handle_unconneted_ping(binary_stream_t *stream, raknet_server_t *server)
 {
 	packet_unconnected_ping_t unconnected_ping = get_packet_unconnected_ping(stream);
@@ -21,6 +23,17 @@ binary_stream_t handle_unconneted_ping(binary_stream_t *stream, raknet_server_t 
 binary_stream_t handle_open_connection_request_1(binary_stream_t *stream, raknet_server_t *server)
 {
 	packet_open_connection_request_1_t open_connection_request_1 = get_packet_open_connection_request_1(stream);
+	if(open_connection_request_1.protocol_version != MOJANG_RAKNET){
+		packet_incompatible_protocol_version_t incompatible_protocol_version;
+		incompatible_protocol_version.protocol_version = MOJANG_RAKNET;
+		incompatible_protocol_version.guid = server->guid;
+		binary_stream_t output_stream;
+		output_stream.buffer = (int8_t *) malloc(0);
+		output_stream.offset = 0;
+		output_stream.size = 0;
+		put_packet_incompatible_protocol_version(incompatible_protocol_version, &output_stream);
+		return output_stream;
+	}
 	packet_open_connection_reply_1_t open_connection_reply_1;
 	open_connection_reply_1.mtu_size = 28 + open_connection_request_1.mtu_size; /* IP header (20) + UDP header (8) + Payload (x) */
 	open_connection_reply_1.use_security = 0;
