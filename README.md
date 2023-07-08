@@ -24,6 +24,7 @@ make
 ```
 MacOS:
 ```
+brew install cmake
 brew install openssl
 cmake CMakeLists.txt
 make
