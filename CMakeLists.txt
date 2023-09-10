@@ -11,9 +11,6 @@ file(GLOB CNBT cnbt/*.c)
 file(GLOB CZLIBHELPER czlibhelper/*.c)
 file(GLOB MINIZ miniz/*.c)
 file(GLOB PODRUM podrum/*.c podrum/misc/*.c podrum/world/*.c podrum/world/format/anvil/*.c podrum/world/chunk/*.c podrum/command/*.c podrum/network/minecraft/*.c podrum/network/raknet/*.c)
-file(GLOB TINYAES tinyaes/*.c)
-file(GLOB ECC ecc/*.c)
-file(GLOB SHA sha256/*.c)
 
 include_directories(.)
 
@@ -30,9 +27,6 @@ add_executable(PodrumR4
         ${CZLIBHELPER}
         ${MINIZ}
         ${PODRUM}
-		${TINYAES}
-		${SHA}
-		${ECC}
 		)
 target_link_libraries(PodrumR4 OpenSSL::SSL)
 target_link_libraries(PodrumR4 OpenSSL::Crypto)
