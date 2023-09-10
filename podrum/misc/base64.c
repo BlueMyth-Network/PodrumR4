@@ -30,7 +30,7 @@ unsigned char * char_base64_encode(const unsigned char *src, size_t len, size_t 
 		in += 3;
 		line_len += 4;
 		if (line_len >= 72) {
-			*pos++ = '\n';
+			// *pos++ = '\n';
 			line_len = 0;
 		}
 	}
@@ -48,9 +48,6 @@ unsigned char * char_base64_encode(const unsigned char *src, size_t len, size_t 
 		*pos++ = '=';
 		line_len += 4;
 	}
-
-	if (line_len)
-		*pos++ = '\n';
 
 	*pos = '\0';
 	if (out_len)
@@ -144,7 +141,6 @@ unsigned char * char_base64_url_encode(const unsigned char *src, size_t len, siz
 		in += 3;
 		line_len += 4;
 		if (line_len >= 72) {
-			*pos++ = '\n';
 			line_len = 0;
 		}
 	}
@@ -153,18 +149,13 @@ unsigned char * char_base64_url_encode(const unsigned char *src, size_t len, siz
 		*pos++ = BASE64_URL_TABLE[in[0] >> 2];
 		if (end - in == 1) {
 			*pos++ = BASE64_URL_TABLE[(in[0] & 0x03) << 4];
-			*pos++ = '=';
 		} else {
 			*pos++ = BASE64_URL_TABLE[((in[0] & 0x03) << 4) |
 					      (in[1] >> 4)];
 			*pos++ = BASE64_URL_TABLE[(in[1] & 0x0f) << 2];
 		}
-		*pos++ = '=';
 		line_len += 4;
 	}
-
-	if (line_len)
-		*pos++ = '\n';
 
 	*pos = '\0';
 	if (out_len)
@@ -200,11 +191,6 @@ unsigned char * char_base64_url_decode(const unsigned char *src, size_t len, siz
 	count = 0;
 	for (i = 0; i < len; i++) {
 		tmp = dtable[src[i]];
-		if (tmp == 0x80)
-			continue;
-
-		if (src[i] == '=')
-			pad++;
 		block[count] = tmp;
 		count++;
 		if (count == 4) {
