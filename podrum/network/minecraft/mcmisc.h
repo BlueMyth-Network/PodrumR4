@@ -5,6 +5,7 @@
 
 #include <podrum/debug.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <cbinarystream/binary_stream.h>
 #include <cnbt/nbt.h>
 #include <podrum/world/chunk/chunk.h>
@@ -96,6 +97,12 @@ static int32_t BITARRAY_V5[4] = {5, 6, 683, 2};
 static int32_t BITARRAY_V6[4] = {6, 5, 820, 2};
 static int32_t BITARRAY_V8[4] = {8, 4, 1024, 0};
 static int32_t BITARRAY_V16[4] = {16, 2, 2048, 0};
+
+typedef struct {
+	uint32_t sender_sub_id;
+	uint32_t recipient_sub_id;
+	int32_t protocol;
+} misc_client_t;
 
 typedef struct {
 	char *identity;
@@ -274,8 +281,44 @@ typedef struct {
 	uint8_t is_persona;
 	uint8_t is_persona_cape_classic;
 	uint8_t is_primary_user;
-	uint8_t override;
+	uint8_t is_override;
 } misc_skin_t;
+
+typedef struct {
+	char *id;
+	char *name;
+	float amount;
+	int32_t operation;
+	int32_t operand;
+	uint8_t can_serialize;
+} misc_attribute_modifier_t;
+
+typedef struct {
+	float min;
+	float max;
+	float current;
+	float default_v;
+	char *id;
+	uint32_t attribute_modifier_count;
+	misc_attribute_modifier_t *attribute_modifier;
+} misc_attribute_t;
+
+typedef struct {
+	int32_t key;
+	int32_t int_property;
+} int_sync_data_property_t;
+
+typedef struct {
+	int32_t key;
+	float float_property;
+} float_sync_data_property_t;
+
+typedef struct {
+	int32_t int_count;
+	int_sync_data_property_t *int_properties;
+	int32_t float_count;
+	float_sync_data_property_t *float_properties;
+} property_sync_data_t;
 
 char *get_misc_string_var_int(binary_stream_t *stream);
 
@@ -319,6 +362,8 @@ misc_item_extra_data_t get_misc_item_extra_data(uint8_t has_blocking_tick, binar
 
 misc_item_t get_misc_item(uint8_t with_stack_id, binary_stream_t *stream);
 
+unsigned char *get_uuid_le(binary_stream_t *stream);
+
 misc_skin_image_t get_misc_skin_image(binary_stream_t *stream);
 
 misc_skin_animation_t get_misc_skin_animation(binary_stream_t *stream);
@@ -327,7 +372,7 @@ misc_skin_persona_t get_misc_skin_persona(binary_stream_t *stream);
 
 misc_skin_persona_tint_color_t get_misc_skin_persona_tint_color(binary_stream_t *stream);
 
-misc_skin_t get_misc_skin(binary_stream_t *stream, int32_t protocol);
+misc_skin_t get_misc_skin(binary_stream_t *stream);
 
 void put_misc_string_var_int(char *value, binary_stream_t *stream);
 
@@ -385,5 +430,9 @@ void put_misc_skin_animation(misc_skin_animation_t animation, binary_stream_t *s
 
 void put_misc_skin_persona(misc_skin_persona_t persona, binary_stream_t *stream);
 
-void put_misc_skin(misc_skin_t skin, binary_stream_t *stream, int32_t protocol);
+void put_misc_skin(misc_skin_t skin, binary_stream_t *stream);
+
+void put_misc_attributes(misc_attribute_t attribute, binary_stream_t *stream);
+
+void put_property_sync_data(property_sync_data_t property_sync_data, binary_stream_t *stream);
 #endif

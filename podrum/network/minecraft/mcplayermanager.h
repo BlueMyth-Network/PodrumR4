@@ -7,7 +7,8 @@
 #include <podrum/network/raknet/rakmisc.h>
 
 typedef struct {
-	int64_t entity_id;
+	int64_t entity_unique_id;
+	uint64_t entity_runtime_id;
 	misc_address_t address;
 	int32_t protocol;
 	char *display_name;
@@ -19,9 +20,13 @@ typedef struct {
 	float z;
 	float pitch;
 	float yaw;
+	float head_yaw;
+	uint64_t tick;
 	int32_t gamemode;
 	int32_t view_distance;
 	uint8_t spawned;
+	unsigned char *uuid;
+	// misc_client_t packet_data;
 } minecraft_player_t;
 
 typedef struct {
@@ -86,6 +91,8 @@ uint8_t has_minecraft_player_display_name(char *display_name, minecraft_player_m
 
 minecraft_player_t *get_minecraft_player_display_name(char *display_name, minecraft_player_manager_t *player_manager);
 
-uint8_t has_minecraft_player_entity_id(int64_t entity_id, minecraft_player_manager_t *player_manager);
+uint8_t has_minecraft_player_entity_unique_id(int64_t entity_unique_id, minecraft_player_manager_t *player_manager);
+
+uint8_t has_minecraft_player_entity_runtime_id(int64_t entity_runtime_id, minecraft_player_manager_t *player_manager);
 
 #endif

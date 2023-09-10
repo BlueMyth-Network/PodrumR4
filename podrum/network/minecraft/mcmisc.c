@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 char *get_misc_string_var_int(binary_stream_t *stream)
 {
@@ -277,14 +278,9 @@ misc_item_t get_misc_item(uint8_t with_stack_id, binary_stream_t *stream)
 	return item;
 }
 
-// uuid_t* get_uuid_le(binary_stream_t *stream) {
-//     uuid_t uuid;
-//     uint8_t raw[16];
-//     memcpy(raw, &stream->buffer[stream->offset], 16);
-//     stream->offset += 16;
-//     uuid_parse(raw, uuid);
-//     return &uuid;
-// }
+unsigned char *get_uuid_le(binary_stream_t *stream) {
+	return (unsigned char *)get_bytes(16, stream);
+}
 
 misc_skin_image_t get_misc_skin_image(binary_stream_t *stream){
 	misc_skin_image_t skin_image;
@@ -317,6 +313,7 @@ misc_skin_persona_tint_color_t get_misc_skin_persona_tint_color(binary_stream_t 
 	misc_skin_persona_tint_color_t skin_persona_tint_color;
 	skin_persona_tint_color.piece_type = get_misc_string_var_int(stream);
 	skin_persona_tint_color.color_count = get_int_le(stream);
+	skin_persona_tint_color.colors = (char **) malloc(sizeof(char *) * skin_persona_tint_color.color_count);
 	uint32_t i;
 	for (i = 0; i < skin_persona_tint_color.color_count; i++){
 		skin_persona_tint_color.colors[i] = get_misc_string_var_int(stream);
@@ -324,16 +321,16 @@ misc_skin_persona_tint_color_t get_misc_skin_persona_tint_color(binary_stream_t 
 	return skin_persona_tint_color;
 }
 
-misc_skin_t get_misc_skin(binary_stream_t *stream, int32_t protocol){
+misc_skin_t get_misc_skin(binary_stream_t *stream){
 	misc_skin_t skin;
 	skin.skin_id = get_misc_string_var_int(stream);
 	skin.play_fab_id = get_misc_string_var_int(stream);
 	skin.resources_patch = get_misc_string_var_int(stream);
 	skin.skin_image = get_misc_skin_image(stream);
 	skin.animation_count = get_int_le(stream);
-	uint32_t i;
-	for (size_t i = 0; i < skin.animation_count; i++){
-		skin.animations[i] = get_misc_skin_animation(stream);
+	uint32_t i0;
+	for (i0 = 0; i0 < skin.animation_count; i0++){
+		skin.animations[i0] = get_misc_skin_animation(stream);
 	}
 	skin.cape_image = get_misc_skin_image(stream);
 	skin.geometry_data = get_misc_string_var_int(stream);
@@ -343,21 +340,41 @@ misc_skin_t get_misc_skin(binary_stream_t *stream, int32_t protocol){
 	skin.full_skin_id = get_misc_string_var_int(stream);
 	skin.arm_size = get_misc_string_var_int(stream);
 	skin.skin_color = get_misc_string_var_int(stream);
-	skin.persona_count = get_int_le(stream);
-	for (size_t i = 0; i < skin.persona_count; i++){
-		skin.personas[i] = get_misc_skin_persona(stream);
+	skin.persona_count = 0;
+	int32_t hack0 = get_int_le(stream);
+	uint32_t i1;
+	for (i1 = 0; i1 < hack0; i1++){
+		stream->offset += get_var_int(stream);//skip string
+		stream->offset += get_var_int(stream);//skip string
+		stream->offset += get_var_int(stream)+1;//skip string and byte
+		stream->offset += get_var_int(stream);//skip string
 	}
-	skin.persona_tint_color_count = get_int_le(stream);
-	for (size_t i = 0; i < skin.persona_tint_color_count; i++){
-		skin.persona_tint_colors[i] = get_misc_skin_persona_tint_color(stream);
+	// skin.persona_count = get_int_le(stream);
+	// uint32_t i1;
+	// for (i1 = 0; i1 < skin.persona_count; i1++){
+	// 	printf("idk%d\n", i1);
+	// 	skin.personas[i1] = get_misc_skin_persona(stream);
+	// }
+	// skin.persona_tint_color_count = get_int_le(stream);	
+	// uint32_t i2;
+	// for (i2 = 0; i2 < skin.persona_tint_color_count; i2++){
+	// 	skin.persona_tint_colors[i2] = get_misc_skin_persona_tint_color(stream);
+	// }
+	skin.persona_tint_color_count = 0;
+	int32_t hack1 = get_int_le(stream);
+	uint32_t i2;
+	for (i2 = 0; i2 < hack1; i2++){
+		stream->offset += get_var_int(stream);//skip string
+		uint32_t i;
+		for (i = 0; i < get_int_le(stream); i++){
+			stream->offset += get_var_int(stream);//skip string
+		}
 	}
 	skin.is_premium = get_unsigned_byte(stream);
 	skin.is_persona = get_unsigned_byte(stream);
 	skin.is_persona_cape_classic = get_unsigned_byte(stream);
 	skin.is_primary_user = get_unsigned_byte(stream);
-	if(protocol >= 568){
-		skin.override = get_unsigned_byte(stream);
-	}
+	skin.is_override = get_unsigned_byte(stream);
 	return skin;
 }
 
@@ -620,6 +637,7 @@ void put_misc_sub_chunk(sub_chunk_t *value, binary_stream_t *stream)
 {
 	put_unsigned_byte(SUB_CHUNK_VERSION, stream);
 	put_unsigned_byte(value->block_storages_count, stream);
+	put_unsigned_byte(0, stream);
 	uint8_t i;
 	for (i = 0; i < value->block_storages_count; ++i) {
 		put_misc_block_storage((&(value->block_storages[i])), stream);
@@ -638,15 +656,7 @@ void put_misc_chunk(chunk_t *value, uint32_t sub_chunk_count, binary_stream_t *s
 }
 
 void put_misc_uuid(unsigned char *uuid, binary_stream_t *stream) {
-    uint8_t *uuid_bytes = (uint8_t*)uuid;
-    uint8_t le_uuid_bytes[16];
-    size_t i;
-    for (i = 0; i < 16; i++) {
-        le_uuid_bytes[i] = uuid_bytes[15 - i];
-    }
-    stream->buffer = (int8_t*) realloc(stream->buffer, stream->size + 16);
-    memcpy(stream->buffer + stream->size, le_uuid_bytes, 16);
-    stream->size += 16;
+	put_bytes((int8_t *)uuid, 16, stream);
 }
 
 void put_misc_skin_image(misc_skin_image_t image, binary_stream_t *stream){
@@ -679,7 +689,7 @@ void put_misc_skin_persona_tint_color(misc_skin_persona_tint_color_t persona_tin
 	}
 }
 
-void put_misc_skin(misc_skin_t skin, binary_stream_t *stream, int32_t protocol) {
+void put_misc_skin(misc_skin_t skin, binary_stream_t *stream) {
 	put_misc_string_var_int(skin.skin_id, stream);
 	put_misc_string_var_int(skin.play_fab_id, stream);
 	put_misc_string_var_int(skin.resources_patch, stream);
@@ -709,7 +719,36 @@ void put_misc_skin(misc_skin_t skin, binary_stream_t *stream, int32_t protocol) 
 	put_unsigned_byte(skin.is_persona, stream);
 	put_unsigned_byte(skin.is_persona_cape_classic, stream);
 	put_unsigned_byte(skin.is_primary_user, stream);
-	if(protocol >= 568){
-		put_unsigned_byte(skin.override, stream);
+	put_unsigned_byte(skin.is_override, stream);
+}
+
+void put_misc_attributes(misc_attribute_t attribute, binary_stream_t *stream){
+	put_float_le(attribute.min, stream);
+	put_float_le(attribute.max, stream);
+	put_float_le(attribute.current, stream);
+	put_float_le(attribute.default_v, stream);
+	put_misc_string_var_int(attribute.id, stream);
+	put_var_int(attribute.attribute_modifier_count, stream);
+	for (size_t i = 0; i < attribute.attribute_modifier_count; i++){
+		put_misc_string_var_int(attribute.attribute_modifier[i].id, stream);
+		put_misc_string_var_int(attribute.attribute_modifier[i].name, stream);
+		put_float_le(attribute.attribute_modifier[i].amount, stream);
+		put_int_le(attribute.attribute_modifier[i].operation, stream);
+		put_int_le(attribute.attribute_modifier[i].operand, stream);
+		put_unsigned_byte(attribute.attribute_modifier[i].can_serialize, stream);
+	}
+}
+
+void put_property_sync_data(property_sync_data_t property_sync_data, binary_stream_t *stream)
+{
+	put_var_int(property_sync_data.int_count, stream);
+	for (size_t i = 0; i < property_sync_data.int_count; i++){
+		put_var_int(property_sync_data.int_properties[i].key, stream);
+		put_signed_var_int(property_sync_data.int_properties[i].int_property, stream);
+	}
+	put_var_int(property_sync_data.float_count, stream);
+	for (size_t i = 0; i < property_sync_data.float_count; i++){
+		put_var_int(property_sync_data.float_properties[i].key, stream);
+		put_float_le(property_sync_data.float_properties[i].float_property, stream);
 	}
 }

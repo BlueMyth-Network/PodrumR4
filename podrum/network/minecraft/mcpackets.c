@@ -1,7 +1,7 @@
 #include <podrum/network/minecraft/mcpackets.h>
 #include <czlibhelper/zlib_helper.h>
 #include <stdlib.h>
-#include <tinyaes/aes.h>
+
 
 packet_game_t get_packet_game(binary_stream_t *stream)
 {
@@ -36,16 +36,6 @@ packet_game_t get_packet_game(binary_stream_t *stream)
 	return game;
 }
 
-struct AES_ctx init_ctx(uint8_t* key){
-	struct AES_ctx ctx;
-    uint8_t iv[16];
-    memcpy(iv, key, 12);
-    memset(iv + 12, 0, 4);
-    iv[15] = (uint8_t)2;
-	AES_init_ctx_iv(&ctx, key, (const uint8_t *)iv);
-    return ctx;
-}
-
 packet_login_t get_packet_login(binary_stream_t *stream)
 {
 	packet_login_t login;
@@ -61,36 +51,6 @@ packet_request_network_setting_t get_packet_request_network_setting(binary_strea
 	packet_request_network_setting_t request;
 	request.protocol_version = get_int_be(stream);
 	return request;
-}
-
-packet_play_status_t get_packet_play_status(binary_stream_t *stream)
-{
-	packet_play_status_t play_status;
-	play_status.status = get_int_be(stream);
-	return play_status;
-}
-
-packet_resource_packs_info_t get_packet_resource_packs_info(binary_stream_t *stream)
-{
-	packet_resource_packs_info_t resource_packs_info;
-	resource_packs_info.must_accept = get_unsigned_byte(stream);
-	resource_packs_info.has_scripts = get_unsigned_byte(stream);
-	resource_packs_info.force_server_packs = get_unsigned_byte(stream);
-	resource_packs_info.behavior_packs = get_misc_behavior_pack_infos(stream);
-	resource_packs_info.texture_packs = get_misc_texture_pack_infos(stream);
-	return resource_packs_info;
-}
-
-packet_resource_pack_stack_t get_packet_resource_pack_stack(binary_stream_t *stream)
-{
-	packet_resource_pack_stack_t resource_pack_stack;
-	resource_pack_stack.must_accept = get_unsigned_byte(stream);
-	resource_pack_stack.behavior_packs = get_misc_resource_pack_id_versions(stream);
-	resource_pack_stack.resource_packs = get_misc_resource_pack_id_versions(stream);
-	resource_pack_stack.game_version = get_misc_string_var_int(stream);
-	resource_pack_stack.experiments = get_misc_experiments(stream);
-	resource_pack_stack.experiments_previously_used = get_unsigned_byte(stream);
-	return resource_pack_stack;
 }
 
 packet_resource_pack_client_response_t get_packet_resource_pack_client_response(binary_stream_t *stream)
@@ -126,7 +86,7 @@ packet_text_t get_packet_text(binary_stream_t *stream)
 			text.parameter_count = get_var_int(stream);
 			uint32_t i;
 			for(i = 0; i < text.parameter_count; ++i){
-				text.parameters[i] =  get_misc_string_var_int(stream);
+				text.parameters[i] = get_misc_string_var_int(stream);
 			}
 			break;
 	}
@@ -135,46 +95,11 @@ packet_text_t get_packet_text(binary_stream_t *stream)
 	return text;
 }
 
-packet_start_game_t get_packet_start_game(binary_stream_t *stream)
-{
-	packet_start_game_t start_game;
-	start_game.entity_id = 0;
-	return start_game;
-}
-
-packet_biome_definition_list_t get_packet_biome_definition_list(binary_stream_t *stream)
-{
-	packet_biome_definition_list_t biome_definition_list;
-	biome_definition_list.nbt = get_misc_nbt_tag(stream);
-	return biome_definition_list;
-}
-
-packet_available_entity_identifiers_t get_packet_available_entity_identifiers(binary_stream_t *stream)
-{
-	packet_available_entity_identifiers_t available_entity_identifiers;
-	available_entity_identifiers.nbt = get_misc_nbt_tag(stream);
-	return available_entity_identifiers;
-}
-
-packet_creative_content_t get_packet_creative_content(binary_stream_t *stream)
-{
-	packet_creative_content_t creative_content;
-	creative_content.size = get_var_int(stream);
-	creative_content.entry_ids = (uint32_t *) malloc(creative_content.size * sizeof(uint32_t));
-	creative_content.items = (misc_item_t *) malloc(creative_content.size * sizeof(misc_item_t));
-	uint32_t i;
-	for (i = 0; i < creative_content.size; ++i) {
-		creative_content.entry_ids[i] = get_var_int(stream);
-		creative_content.items[i] = get_misc_item(0, stream);
-	}
-	return creative_content;
-}
-
 packet_interact_t get_packet_interact(binary_stream_t *stream)
 {
 	packet_interact_t interact;
 	interact.action_id = get_unsigned_byte(stream);
-	interact.target_entity_id = get_var_long(stream);
+	interact.entity_runtime_id = get_var_long(stream);
 	if (interact.action_id == INTERACT_LEAVE_VEHICLE || interact.action_id == INTERACT_MOUSE_OVER_ENTITY) {
 		interact.position_x = get_float_le(stream);
 		interact.position_y = get_float_le(stream);
@@ -191,7 +116,7 @@ packet_container_open_t get_packet_container_open(binary_stream_t *stream)
 	container_open.coordinates_x = get_signed_var_int(stream);
 	container_open.coordinates_y = get_var_int(stream);
 	container_open.coordinates_z = get_signed_var_int(stream);
-	container_open.runtime_entity_id = get_signed_var_long(stream);
+	container_open.entity_unique_id = get_signed_var_long(stream);
 	return container_open;
 }
 
@@ -224,16 +149,6 @@ packet_move_player_t get_packet_move_player(binary_stream_t *stream)
 	return move_player;
 }
 
-packet_network_chunk_publisher_update_t get_packet_network_chunk_publisher_update(binary_stream_t *stream)
-{
-	packet_network_chunk_publisher_update_t network_chunk_publisher_update;
-	network_chunk_publisher_update.x = get_signed_var_int(stream);
-	network_chunk_publisher_update.y = get_var_int(stream);
-	network_chunk_publisher_update.z = get_signed_var_int(stream);
-	network_chunk_publisher_update.radius = get_var_int(stream);
-	return network_chunk_publisher_update;
-}
-
 packet_request_chunk_radius_t get_packet_request_chunk_radius(binary_stream_t *stream)
 {
 	packet_request_chunk_radius_t request_chunk_radius;
@@ -241,33 +156,25 @@ packet_request_chunk_radius_t get_packet_request_chunk_radius(binary_stream_t *s
 	return request_chunk_radius;
 }
 
-packet_chunk_radius_updated_t get_packet_chunk_radius_updated(binary_stream_t *stream)
+packet_player_skin_t get_packet_player_skin(binary_stream_t *stream)
 {
-	packet_chunk_radius_updated_t chunk_radius_updated;
-	chunk_radius_updated.chunk_radius = get_signed_var_int(stream);
-	return chunk_radius_updated;
+	packet_player_skin_t player_skin;
+	player_skin.skin_uuid = get_uuid_le(stream);
+	player_skin.skin_data = get_misc_skin(stream);
+	player_skin.new_skin_name = get_misc_string_var_int(stream);
+	player_skin.old_skin_name = get_misc_string_var_int(stream);
+	player_skin.verified = get_unsigned_byte(stream);
+	return player_skin;
 }
 
-packet_level_chunk_t get_packet_level_chunk(binary_stream_t *stream)
+packet_request_ability_t get_packet_request_ability(binary_stream_t *stream)
 {
-	packet_level_chunk_t level_chunk;
-	level_chunk.x = get_signed_var_int(stream);
-	level_chunk.z = get_signed_var_int(stream);
-	level_chunk.sub_chunk_count = get_var_int(stream);
-	if (level_chunk.sub_chunk_count == 0xfffffffe) {
-		level_chunk.highest_subchunk_count = get_unsigned_short_le(stream);
-	}
-	level_chunk.cache_enabled = get_unsigned_byte(stream);
-	if (level_chunk.cache_enabled) {
-		level_chunk.hashes_count = get_var_int(stream);
-		level_chunk.hashes = (uint64_t *) malloc(level_chunk.hashes_count * sizeof(uint64_t));
-		uint32_t i;
-		for (i = 0; i < level_chunk.hashes_count; ++i) {
-			level_chunk.hashes[i] = get_unsigned_long_le(stream);
-		}
-	}
-	level_chunk.payload = get_misc_byte_array_var_int(stream);
-	return level_chunk;
+	packet_request_ability_t request_ability;
+	request_ability.ability_id = get_signed_var_int(stream);
+	request_ability.ability_type = get_unsigned_byte(stream);
+	request_ability.ability_bool = get_unsigned_byte(stream);
+	request_ability.ability_float = get_float_le(stream);
+	return request_ability;
 }
 
 void put_packet_game(packet_game_t packet, binary_stream_t *stream, uint8_t iscompress)
@@ -277,8 +184,7 @@ void put_packet_game(packet_game_t packet, binary_stream_t *stream, uint8_t isco
 	temp_stream.offset = 0;
 	temp_stream.size = 0;
 	size_t i;
-	for (i = 0; i < packet.streams_count; ++i)
-	{
+	for (i = 0; i < packet.streams_count; ++i){
 		put_var_int(packet.streams[i].size, &temp_stream);
 		put_bytes(packet.streams[i].buffer, packet.streams[i].size, &temp_stream);
 	}
@@ -296,19 +202,6 @@ void put_packet_game(packet_game_t packet, binary_stream_t *stream, uint8_t isco
 		put_bytes(temp_stream.buffer, temp_stream.size, stream);
 		free(temp_stream.buffer);
 	}
-}
-
-void put_packet_login(packet_login_t packet, binary_stream_t *stream)
-{
-	put_var_int(ID_LOGIN, stream);
-	put_int_be(packet.protocol_version, stream);
-	binary_stream_t temp_stream;
-	temp_stream.buffer = (int8_t *) malloc(0);
-	temp_stream.offset = 0;
-	temp_stream.size = 0;
-	put_misc_login_tokens(packet.tokens, &temp_stream);
-	put_misc_byte_array_var_int(temp_stream, stream);
-	free(temp_stream.buffer);
 }
 
 void put_packet_play_status(packet_play_status_t packet, binary_stream_t *stream)
@@ -334,6 +227,7 @@ void put_packet_resource_packs_info(packet_resource_packs_info_t packet, binary_
 	put_unsigned_byte(packet.force_server_packs, stream);
 	put_misc_behavior_pack_infos(packet.behavior_packs, stream);
 	put_misc_texture_pack_infos(packet.texture_packs, stream);
+	// put_var_int(0, stream);//TODO: PBR stuff
 }
 
 void put_packet_resource_pack_stack(packet_resource_pack_stack_t packet, binary_stream_t *stream)
@@ -386,11 +280,17 @@ void put_packet_text(packet_text_t packet, binary_stream_t *stream){
 	put_misc_string_var_int(packet.platform_chat_id, stream);
 }
 
-void put_packet_start_game(packet_start_game_t packet, binary_stream_t *stream, int32_t protocol)
+void put_packet_set_time(int32_t time, binary_stream_t *stream)
+{
+	put_var_int(ID_SET_TIME, stream);
+	put_signed_var_int(time, stream);
+}
+
+void put_packet_start_game(packet_start_game_t packet, binary_stream_t *stream)
 {
 	put_var_int(ID_START_GAME, stream);
-	put_signed_var_long(packet.entity_id, stream);
-	put_var_long(packet.runtime_entity_id, stream);
+	put_signed_var_long(packet.entity_unique_id, stream);
+	put_var_long(packet.entity_runtime_id, stream);
 	put_signed_var_int(packet.player_gamemode, stream);
 	put_float_le(packet.player_x, stream);
 	put_float_le(packet.player_y, stream);
@@ -408,13 +308,9 @@ void put_packet_start_game(packet_start_game_t packet, binary_stream_t *stream, 
 	put_var_int(packet.spawn_y, stream);
 	put_signed_var_int(packet.spawn_z, stream);
 	put_unsigned_byte(packet.achievements_disabled, stream);
-	if(protocol >= 534){
-		put_unsigned_byte(0, stream);
-	}
-	if(protocol >= 582){
-		put_unsigned_byte(0, stream);
-		put_unsigned_byte(0, stream);
-	}
+	put_unsigned_byte(0, stream);//editor
+	put_unsigned_byte(1, stream);//createineditor
+	put_unsigned_byte(0, stream);//exportededitor
 	put_signed_var_int(packet.day_cycle_stop_time, stream);
 	put_signed_var_int(packet.edu_offer, stream);
 	put_unsigned_byte(packet.edu_features_enabled, stream);
@@ -442,23 +338,17 @@ void put_packet_start_game(packet_start_game_t packet, binary_stream_t *stream, 
 	put_unsigned_byte(packet.is_from_world_template, stream);
 	put_unsigned_byte(packet.is_world_template_option_locked, stream);
 	put_unsigned_byte(packet.only_spawn_v1_villagers, stream);
-	if(protocol >= 544){
-		put_unsigned_byte(1, stream);
-		put_unsigned_byte(0, stream);
-	}
-	if(protocol >= 567){
-		put_unsigned_byte(1, stream);
-	}
+	put_unsigned_byte(1, stream);//disablepersona
+	put_unsigned_byte(0, stream);//disablecustomskin
+	put_unsigned_byte(1, stream);//muteemote
 	put_misc_string_var_int(packet.game_version, stream);
 	put_int_le(packet.limited_world_width, stream);
 	put_int_le(packet.limited_world_length, stream);
 	put_unsigned_byte(packet.is_new_nether, stream);
 	put_misc_education_shared_resource_uri(packet.edu_resource_uri, stream);
 	put_unsigned_byte(packet.experimental_gameplay_override, stream);
-	if(protocol >= 544){
-		put_unsigned_byte(0, stream);
-		put_unsigned_byte(0, stream);
-	}
+	put_unsigned_byte(0, stream);//chatrestriction
+	put_unsigned_byte(0, stream);//noplayerinteractions
 	put_misc_string_var_int(packet.level_id, stream);
 	put_misc_string_var_int(packet.world_name, stream);
 	put_misc_string_var_int(packet.premium_world_template_id, stream);
@@ -473,23 +363,65 @@ void put_packet_start_game(packet_start_game_t packet, binary_stream_t *stream, 
 	put_misc_string_var_int(packet.multiplayer_correlation_id, stream);
 	put_unsigned_byte(packet.server_authoritative_inventory, stream);
 	put_misc_string_var_int(packet.engine, stream);
-        if(protocol > 503){
-		put_byte(COMPOUND_TAG, stream);
-		put_var_int(0, stream);
-		put_byte(END_TAG, stream);
-	}
+	put_byte(COMPOUND_TAG, stream);
+	put_var_int(0, stream);
+	put_byte(END_TAG, stream);
 	put_unsigned_long_le(packet.block_pallete_checksum, stream);
-	if(protocol > 503){
-		unsigned char *uuid = (unsigned char *)"0000000000000000";
-		put_misc_uuid(uuid, stream);
-	}
-	if(protocol >= 544){
-		put_unsigned_byte(0, stream);
-	}
-	if(protocol >= 582){
-		put_unsigned_byte(0, stream);
-	}
+	put_misc_uuid((unsigned char *)"0000000000000000", stream);
+	put_unsigned_byte(0, stream);//enableclientsidegen
+	put_unsigned_byte(0, stream);//blockhash
+	put_unsigned_byte(0, stream);//serversidesound
 }
+
+/*void put_packet_add_player(binary_stream_t *stream)
+{
+	put_var_int(ID_ADD_PLAYER, stream);
+	put_misc_uuid(, stream);
+	put_misc_string_var_int(, stream);
+	put_var_long(, stream);
+	put_misc_string_var_int(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_misc_item(, stream);
+	put_signed_var_int(, stream);
+	//metadata
+	put_property_sync_data(, stream);
+}*/
+
+/*void put_packet_add_entity(binary_stream_t *stream)
+{
+	put_var_int(ID_ADD_ENTITY, stream);
+	put_signed_var_long(entity_unique_id, stream);
+	put_var_long(, stream);
+	put_misc_string_var_int(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_float_le(, stream);
+	put_var_int(, stream);
+	for (size_t i = 0; i < count; i++)
+	{
+		put_misc_string_var_int(attributes[i].id, stream);
+		put_float_le(attributes[i].min, stream);
+		put_float_le(attributes[i].current, stream);
+		put_float_le(attributes[i].max, stream);
+	}
+	//metadata
+
+}*/
 
 void put_packet_biome_definition_list(packet_biome_definition_list_t packet, binary_stream_t *stream)
 {
@@ -514,11 +446,23 @@ void put_packet_creative_content(packet_creative_content_t packet, binary_stream
 	}
 }
 
+void put_packet_update_attributes(packet_update_attributes_t packet, binary_stream_t *stream)
+{
+	put_var_int(ID_UPDATE_ATTRIBUTES_PACKET, stream);
+	put_var_long(packet.entity_runtime_id, stream);
+	put_var_int(packet.size, stream);
+	uint32_t i;
+	for (i = 0; i < packet.size; ++i) {
+		put_misc_attributes(packet.attributes[i], stream);
+	}
+	put_var_long(packet.tick, stream);
+}
+
 void put_packet_interact(packet_interact_t packet, binary_stream_t *stream)
 {
 	put_var_int(ID_INTERACT, stream);
 	put_unsigned_byte(packet.action_id, stream);
-	put_var_long(packet.target_entity_id, stream);
+	put_var_long(packet.entity_runtime_id, stream);
 	if (packet.action_id == INTERACT_LEAVE_VEHICLE || packet.action_id == INTERACT_MOUSE_OVER_ENTITY) {
 		put_float_le(packet.position_x, stream);
 		put_float_le(packet.position_y, stream);
@@ -534,8 +478,9 @@ void put_packet_container_open(packet_container_open_t packet, binary_stream_t *
 	put_signed_var_int(packet.coordinates_x, stream);
 	put_var_int(packet.coordinates_y, stream);
 	put_signed_var_int(packet.coordinates_z, stream);
-	put_signed_var_long(packet.runtime_entity_id, stream);
+	put_signed_var_long(packet.entity_unique_id, stream);
 }
+
 void put_packet_container_close(packet_container_close_t packet, binary_stream_t *stream)
 {
 	put_var_int(ID_CONTAINER_CLOSE, stream);
@@ -563,6 +508,29 @@ void put_packet_move_player(packet_move_player_t packet, binary_stream_t *stream
 	put_var_long(packet.tick, stream);
 }
 
+void put_packet_move_entity(packet_move_entity_t packet, binary_stream_t *stream)
+{
+	put_var_int(ID_MOVE_ENTITY, stream);
+	put_var_int(packet.runtime_id, stream);
+	put_unsigned_byte(packet.flags, stream);
+	put_float_le(packet.position_x, stream);
+	put_float_le(packet.position_y, stream);
+	put_float_le(packet.position_z, stream);
+	put_unsigned_byte((uint8_t)(packet.pitch / 1.40625), stream);
+	put_unsigned_byte((uint8_t)(packet.yaw / 1.40625), stream);
+	put_unsigned_byte((uint8_t)(packet.head_yaw / 1.40625), stream);
+}
+
+void put_packet_player_skin(packet_player_skin_t packet, binary_stream_t *stream)
+{
+	put_var_int(ID_PLAYER_SKIN, stream);
+	put_misc_uuid(packet.skin_uuid, stream);
+	put_misc_skin(packet.skin_data, stream);
+	put_misc_string_var_int(packet.new_skin_name, stream);
+	put_misc_string_var_int(packet.old_skin_name, stream);
+	put_unsigned_byte(packet.verified, stream);
+}
+
 void put_packet_network_chunk_publisher_update(packet_network_chunk_publisher_update_t packet, binary_stream_t *stream, int32_t protocol)
 {
 	put_var_int(ID_NETWORK_CHUNK_PUBLISHER_UPDATE, stream);
@@ -570,9 +538,7 @@ void put_packet_network_chunk_publisher_update(packet_network_chunk_publisher_up
 	put_var_int(packet.y, stream);
 	put_signed_var_int(packet.z, stream);
 	put_var_int(packet.radius, stream);
-	if(protocol >= 544){
-		put_int_le(0, stream);
-	}
+	put_int_le(0, stream);//saveed chunk
 }
 
 void put_packet_request_chunk_radius(packet_request_chunk_radius_t packet, binary_stream_t *stream)

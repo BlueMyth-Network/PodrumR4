@@ -13,11 +13,13 @@ void send_minecraft_packet(binary_stream_t *streams, size_t streams_count, conne
 
 void send_network_chunk_publisher_update(minecraft_player_t *player, connection_t *connection, raknet_server_t *server);
 
+void teleport(float position_x, float position_y, float position_z, float pitch, float yaw, float head_yaw, minecraft_player_t *player, connection_t *connection, raknet_server_t *server);
+
 void send_chunk(chunk_t *chunk, minecraft_player_t *player, connection_t *connection, raknet_server_t *server);
 
 void send_play_status(int32_t status, connection_t *connection, raknet_server_t *server);
 
-void send_msg(char* message, connection_t *connection, raknet_server_t *server);
+void send_msg(char* message, char* source_name, connection_t *connection, raknet_server_t *server);
 
 void send_chunks(mapping_block_states_t block_states, minecraft_player_t *player, connection_t *connection, raknet_server_t *server);
 

@@ -2,6 +2,12 @@
 #include <podrum/network/minecraft/mcpackets.h>
 #include <podrum/world/chunk/chunk.h>
 #include <math.h>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
+#include <openssl/ec.h>
+#include <openssl/err.h>
+#include <openssl/bn.h>
 
 void send_minecraft_packet(binary_stream_t *streams, size_t streams_count, connection_t *connection, raknet_server_t *server, uint8_t compress)
 {
@@ -73,7 +79,31 @@ void send_play_status(int32_t status, connection_t *connection, raknet_server_t 
 	free(streams);
 }
 
-void send_msg(char* message, connection_t *connection, raknet_server_t *server){
+void teleport(float position_x, float position_y, float position_z, float pitch, float yaw, float head_yaw, minecraft_player_t *player, connection_t *connection, raknet_server_t *server){
+	binary_stream_t *streams = (binary_stream_t *) malloc(sizeof(binary_stream_t));
+	streams[0].buffer = (int8_t *) malloc(0);
+	streams[0].size = 0;
+	streams[0].offset = 0;
+	packet_move_player_t move_plaer;
+	move_plaer.runtime_id = player->entity_runtime_id;
+	player->x = move_plaer.position_x = position_x;
+	player->y = move_plaer.position_y = position_y;
+	player->z = move_plaer.position_z = position_z;
+	player->pitch = move_plaer.pitch = pitch;
+	player->yaw = move_plaer.yaw = yaw;
+	player->head_yaw = move_plaer.head_yaw = head_yaw;
+	move_plaer.mode = MOVE_PLAYER_MODE_TELEPORT;
+	move_plaer.on_ground = 0;
+	move_plaer.teleport_cause = 3;
+	move_plaer.teleport_source_entity_type = 0;
+	move_plaer.tick = 0;
+	put_packet_move_player(move_plaer, (&(streams[0])));
+	send_minecraft_packet(streams, 1, connection, server, 1);
+	free(streams[0].buffer);
+	free(streams);
+}
+
+void send_msg(char* message, char* source_name, connection_t *connection, raknet_server_t *server){
 	binary_stream_t *streams = (binary_stream_t *) malloc(sizeof(binary_stream_t));
 	streams[0].buffer = (int8_t *) malloc(0);
 	streams[0].size = 0;
@@ -81,7 +111,7 @@ void send_msg(char* message, connection_t *connection, raknet_server_t *server){
 	packet_text_t text;
 	text.type = TEXT_CHAT;
 	text.needs_translation = 0;
-	text.source_name = "";
+	text.source_name = source_name;
 	text.message = message;
 	put_packet_text(text, (&(streams[0])));
 	send_minecraft_packet(streams, 1, connection, server, 1);
@@ -91,7 +121,6 @@ void send_msg(char* message, connection_t *connection, raknet_server_t *server){
 
 void send_chunks(mapping_block_states_t block_states, minecraft_player_t *player, connection_t *connection, raknet_server_t *server)
 {
-	send_network_chunk_publisher_update(player, connection, server);
 	int32_t air_runtime_id = block_state_to_runtime_id("minecraft:air", 0, block_states);
 	int32_t bedrock_runtime_id = block_state_to_runtime_id("minecraft:bedrock", 0, block_states);
 	int32_t dirt_runtime_id = block_state_to_runtime_id("minecraft:dirt", 0, block_states);
@@ -104,6 +133,7 @@ void send_chunks(mapping_block_states_t block_states, minecraft_player_t *player
 		int32_t z;
 		for (z = current_z - player->view_distance; z < (current_z + player->view_distance); ++z) {
 			chunk = new_chunk(x, z, air_runtime_id);
+
 			// temp auto generate chunk
 			int32_t xx;
 			for (xx = 0; xx < 16; ++xx) {
@@ -119,4 +149,5 @@ void send_chunks(mapping_block_states_t block_states, minecraft_player_t *player
 			destroy_chunk(&chunk);
 		}
 	}
+	send_network_chunk_publisher_update(player, connection, server);
 }

@@ -82,11 +82,22 @@ minecraft_player_t *get_minecraft_player_display_name(char *display_name, minecr
 	return NULL;
 }
 
-uint8_t has_minecraft_player_entity_id(int64_t entity_id, minecraft_player_manager_t *player_manager)
+uint8_t has_minecraft_player_entity_unique_id(int64_t entity_unique_id, minecraft_player_manager_t *player_manager)
 {
 	size_t i;
 	for (i = 0; i < player_manager->size; ++i) {
-		if (player_manager->players[i].entity_id == entity_id) {
+		if (player_manager->players[i].entity_unique_id == entity_unique_id) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+uint8_t has_minecraft_player_entity_runtime_id(int64_t entity_runtime_id, minecraft_player_manager_t *player_manager)
+{
+	size_t i;
+	for (i = 0; i < player_manager->size; ++i) {
+		if (player_manager->players[i].entity_runtime_id == entity_runtime_id) {
 			return 1;
 		}
 	}
