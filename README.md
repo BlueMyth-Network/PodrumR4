@@ -1,4 +1,6 @@
-# Podrum
+# DEPRECATED
+** Podrum-R4 is a fork of Podrum and will receive no further updates due to have a lot of problems.**
+# Podrum-R4
 
 ## Introduction
 Podrum is a server software for Minecraft Bedrock Edition written in C and aims to be fast, stable and secure.
